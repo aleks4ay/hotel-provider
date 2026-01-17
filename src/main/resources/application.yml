@@ -8,6 +8,11 @@ spring:
     username: sa
     password: sa
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:18080/realms/sandbox
 
   liquibase:
     change-log: classpath:db/changelog/master.xml

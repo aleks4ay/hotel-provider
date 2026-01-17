@@ -1,0 +1,89 @@
+{} - обозначают, что значение нужно печатать, а не выбирать
+--> - нажать на кнопку
+
+1. Run keycloak:
+	docker run --name keycloak-sandbox -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin -p 18080:8080 -v j:\PROJECTS\_tutorials_\rural-javadev-spring-security\config\keycloak:/opt/keycloak/data/import quay.io/keycloak/keycloak:23.0.6 start-dev --import-realm
+
+2. Запустить localhost:18080
+	2.1 Зайти в Админ-консоль, admin/admin
+	2.2 Создать новое пространство (нажать на master --> create realm --> ввести только `Realm name` = sandbox, например)
+
+3 Создать "Client scopes":  Client scopes --> Create client scope
+	3.1 Name: {greetings}
+		Type: optional
+		Display on consent screen: off
+		Include in token scope: On
+		--> Save
+4 Добавить клиентов в скоуп. Clients --> Create Client
+	-1 General settings:
+		Client type: OpenID Connect
+		ClientID: {greetings-app}
+		Always display in UI: Off
+		--> next
+	-2 Capability config:
+		Client authentication: On
+		Authentication flow: выбрать "Standard flow", "Service accounts roles"
+		--> next
+	-3 Login settings:
+		Root URL: {http://localhost:8080}
+		Valid redirect URIs: {/*}
+		--> Save
+	4) перейти на вкладку "Client scopes", выбрать вкладку "Evaluate"
+		Scope parameter: к указаному "openid" добавить печатанием наш "greetings"
+5. Создать роль - слева вкладка "Realm roles" --> "Create role":
+	"Role name": {ROLE_MANAGER}
+	--> Save
+6. Для назначения данной роли всем участникам группы - слева вкладка "Groups" --> "Create a group"
+	Name: {Managers}
+	--> Create
+	--> вкладка Role mapping
+		--> Assign role - выбрать "ROLE_MANAGER" --> Assign
+7. Создать юзера: слева вкладка "Users" --> "Add user"
+	"Username": {j.dewar}
+	"Email": {j.dewar@google.com}
+	"Email verified": Yes
+	"First name": {John}
+	"Last name": {Dewar}
+	"Groups": --> "Join groups" - выбираем "Managers" --> Join
+	--> Create
+	
+	перейти на вкладку "Credentials" --> Set password
+		"Password": {password}
+		"Password confirmation": {password}
+		"Temporary": Off
+		--> Save
+		--> Save password
+8. Для проверки генерации токена:
+	Clients --> greetings-app --> Client scopes --> Evaluate
+	"Scope parameter" указать "openid", "greetings", "microprofile-jwt"
+	"Users": {j.dewar}
+	--> Generated access token
+
+9. Для получения Bearer-токена авторизации нужно
+    - узнать пароль для клиента: --> Clients --> greetings-app --> Credentials
+        "Client Authenticator": "Client Id and Secret"
+        "Client secrets": "q4hzEgciUvOT76JQKD3LqHaPaK39x06k" --> скопировать
+
+    - постманом вызвать POST http://localhost:18080/realms/sandbox/protocol/openid-connect/token
+        авторизация: Basic Auth: "Username": {greetings-app}
+                                 "Password": {q4hzEgciUvOT76JQKD3LqHaPaK39x06k}
+        "body": -> "x-www-form-urlencoded":
+            Key -> Value
+            grant_type -> client_credentials
+            scope -> greetings
+    - скопировать значение токена в "Bearer Token": "Token" и вызвать АПИ (http://localhost:8081/greetings-api/greetings)
+        в приложении для расшифровки токена должна присутствовать настройка в application.yml
+        spring:
+          security:
+            oauth2:
+              resourceserver:
+                jwt:
+                  issuer-uri: http://localhost:18080/realms/sandbox
+        (тот uri, с которым мы получали токен, но без {/protocol/openid-connect/token})
+
+10. Скопировать конфигурацию себе на комп (потом переместить в папку проекта ./config/keycloak)
+    10.1 Создать файл-конфиг внутри контейнера (keycloak-sandbox - это имя контейнера):
+        docker exec keycloak-sandbox /opt/keycloak/bin/kc.sh export --dir /opt/keycloak/data/export --realm sandbox --users realm_file --format=single-file  - не работает из-за --format=single-file
+        docker exec keycloak-sandbox /opt/keycloak/bin/kc.sh export --dir /opt/keycloak/data/export --realm sandbox --users realm_file   - работает
+    10.2 скопировать на комп (в папку юзера):
+        docker cp keycloak-sandbox:/opt/keycloak/data/export/sandbox-realm.json ./sandbox-realm.json
