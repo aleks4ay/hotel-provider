@@ -4,7 +4,5 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-    <include file="db/changelog/v_001/init-db.xml"/>
-    <include file="db/changelog/v_002/hotel.xml"/>
-    <include file="db/changelog/v_003/room.xml"/>
+    <include file="db/changelog/v_001/init-db-test.xml"/>
 </databaseChangeLog>

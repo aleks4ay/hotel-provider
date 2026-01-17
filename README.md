@@ -13,4 +13,3 @@ Part of Hotel microservices
     - "spring.datasource.url", sqlServerContainer::getJdbcUrl
     - "spring.datasource.username", sqlServerContainer::getUsername
     - "spring.datasource.password", sqlServerContainer::getPassword
-- Для конкретного примера можно было профиль и `application-test.yml` не добавлять, так как ни одна из переменных не отличается от тех, что в `application.yml`
