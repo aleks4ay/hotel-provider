@@ -12,8 +12,14 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:18080/realms/sandbox
+          issuer-uri: http://localhost:18080/realms/hotel-provider
 
   liquibase:
     change-log: classpath:db/changelog/master.xml
     enabled: true
+
+keycloak:
+  server-url: http://localhost:18080
+  realm: hotel-provider
+  secret: 8UwMrcdNc8o9IsrZu51dDDXwJJTxy6KD
+  client-id: spring-app
